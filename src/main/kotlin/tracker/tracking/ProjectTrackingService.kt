@@ -1,6 +1,5 @@
 package tracker.tracking
 
-import com.intellij.AppTopics
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
@@ -20,6 +19,10 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileEvent
 import com.intellij.openapi.vfs.VirtualFileListener
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.newvfs.BulkFileListener
+import com.intellij.openapi.vfs.newvfs.events.VFileCreateEvent
+import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
+import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.wm.WindowManager
 import tracker.Notifier
 import tracker.api.EventQueueService
@@ -152,7 +155,7 @@ class ProjectTrackingService(private val project: Project) : Disposable {
         )
 
         connection.subscribe(
-            AppTopics.FILE_DOCUMENT_SYNC,
+            FileDocumentManagerListener.TOPIC,
             object : FileDocumentManagerListener {
                 override fun beforeDocumentSaving(document: com.intellij.openapi.editor.Document) {
                     val file = FileDocumentManager.getInstance().getFile(document)
@@ -161,17 +164,20 @@ class ProjectTrackingService(private val project: Project) : Disposable {
             }
         )
 
-        VirtualFileManager.getInstance().addVirtualFileListener(
-            object : VirtualFileListener {
-                override fun fileCreated(event: VirtualFileEvent) {
-                    handleActivity(event.file, "file-created")
-                }
+        connection.subscribe(
+            VirtualFileManager.VFS_CHANGES,
+            object : BulkFileListener {
+                override fun after(events: List<VFileEvent>) {
+                    events.forEach { event ->
+                        val file = event.file ?: return@forEach
 
-                override fun fileDeleted(event: VirtualFileEvent) {
-                    handleActivity(event.file, "file-deleted")
+                        when (event) {
+                            is VFileCreateEvent -> handleActivity(file, "file-created")
+                            is VFileDeleteEvent -> handleActivity(file, "file-deleted")
+                        }
+                    }
                 }
-            },
-            this
+            }
         )
 
         EditorFactory.getInstance().eventMulticaster.addCaretListener(

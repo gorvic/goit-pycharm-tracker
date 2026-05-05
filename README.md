@@ -286,11 +286,20 @@ Use SOFT mode → for real working time tracking
 
 ## Version
 
-Current version: **1.6.0**
+Current version: **1.6.1**
 
 ---
 
 ## Changelog
+
+### 1.6.1
+
+* Resolved JetBrains Marketplace validation issues.
+* Removed internal API usage related to Status Bar widget management.
+* Reworked Status Bar widget visibility handling to comply with IntelliJ Platform guidelines.
+* Added IDE restart prompt when changing Status Bar widget visibility.
+* Reduced deprecated API usage and improved forward compatibility.
+* General stability and code quality improvements.
 
 ### 1.6.0
 

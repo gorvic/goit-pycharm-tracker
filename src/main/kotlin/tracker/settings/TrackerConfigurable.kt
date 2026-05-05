@@ -1,9 +1,11 @@
 package tracker.settings
 
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ex.ApplicationEx
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.options.Configurable
+import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.Messages
 import tracker.api.ApiClient
 import tracker.api.ApiSendResult
@@ -11,17 +13,13 @@ import tracker.api.EventQueueService
 import tracker.api.TrackerEvent
 import tracker.stats.StatsCalculator
 import tracker.stats.StatsDialog
-import tracker.status.GoitStatusBarWidget
 import tracker.tools.LogOpener
-//import tracker.tools.UpdateChecker
-import tracker.tools.VersionUtil
 import tracker.tools.VsixImporter
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.time.Instant
 import javax.swing.JButton
 import javax.swing.JCheckBox
-import javax.swing.JComboBox
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
@@ -29,9 +27,10 @@ import javax.swing.JTextArea
 import javax.swing.JTextField
 import javax.swing.SwingUtilities
 
-import com.intellij.openapi.project.ProjectManager
-import com.intellij.openapi.wm.WindowManager
 import tracker.Notifier
+import com.intellij.ui.JBColor
+import java.awt.Color
+import java.awt.Font
 
 class TrackerConfigurable : Configurable {
 
@@ -43,20 +42,21 @@ class TrackerConfigurable : Configurable {
         .getService(ApiClient::class.java)
 
     private val userTokenField = JTextField()
-    //private val eventField = JTextField()
     private val endpointField = JTextField()
     private val fileExtensionsField = JTextField()
     private val updateInfoUrlField = JTextField()
 
+    private val restartIdeButton = JButton("Restart IDE")
+    private var initialDisableStatusBarButton: Boolean? = null
     private val disableStatusBarButton = JCheckBox("Disable status bar button")
     private val activateOnStartupButton = JCheckBox("Activate on startup")
     private val tickSecondsField = JTextField()
     private val idleTimeoutSecondsField = JTextField()
     private val flushIntervalSecondsField = JTextField()
 
-    private val activityTrackingModeBox = JComboBox(arrayOf("Hard key press activity", "Soft activity"))
+    private val activityTrackingModeBox = ComboBox(arrayOf("Hard key press activity", "Soft activity"))
 
-    private val logModeBox = JComboBox(arrayOf("Normal", "Errors only", "Debug"))
+    private val logModeBox = ComboBox(arrayOf("Normal", "Errors only", "Debug"))
     private val maxLogFileSizeMbField = JTextField()
     private val customDataDirField = JTextField()
 
@@ -66,8 +66,6 @@ class TrackerConfigurable : Configurable {
     private val totalTimeField = JTextField()
     private val todayTimeField = JTextField()
 
-    //private val updateButton = JButton("Update plugin")
-    //private val checkUpdatesButton = JButton("Check for updates")
     private val importButton = JButton("Import from VSCode plugin...")
     private val showLogsButton = JButton("Show logs")
     private val openSessionsButton = JButton("Open sessions log")
@@ -79,7 +77,6 @@ class TrackerConfigurable : Configurable {
     private val detailedStatsButton = JButton("Detailed statistics")
 
     private val updateNotes = JTextArea(3, 40)
-    private var latestDownloadUrl = ""
     private var importedSettings: TrackerSettings? = null
     private var panel: JPanel? = null
 
@@ -89,7 +86,6 @@ class TrackerConfigurable : Configurable {
         val result = JPanel(GridBagLayout())
         panel = result
 
-        //eventField.isEditable = false
         currentVersionField.isEditable = false
         latestVersionField.isEditable = false
         pendingEventsField.isEditable = false
@@ -98,20 +94,22 @@ class TrackerConfigurable : Configurable {
         updateNotes.isEditable = false
         updateNotes.lineWrap = true
         updateNotes.wrapStyleWord = true
-        //updateButton.isVisible = false
+        restartIdeButton.isVisible = false
+        restartIdeButton.isFocusable = false
+        restartIdeButton.foreground = JBColor(Color(0x2E7D32), Color(0x66BB6A))
+        //restartIdeButton.font = restartIdeButton.font.deriveFont(Font.BOLD)
 
         var row = 0
 
         addSection(result, row++, "Connection")
         addRow(result, row++, "User token / UID:", userTokenField)
-        //addRow(result, row++, "Event:", eventField)
         addRow(result, row++, "Endpoint:", endpointField)
         addRow(result, row++, "File extensions:", fileExtensionsField)
         addConnectionButtons(result, row++)
 
         addSection(result, row++, "Tracking")
         addFullRow(result, row++, activateOnStartupButton)
-        addFullRow(result, row++, disableStatusBarButton)
+        addStatusBarButtonRow(result, row++)
         addRow(result, row++, "Tick seconds:", tickSecondsField)
         addRow(result, row++, "Idle timeout seconds:", idleTimeoutSecondsField)
         addRow(result, row++, "Flush interval seconds:", flushIntervalSecondsField)
@@ -128,20 +126,9 @@ class TrackerConfigurable : Configurable {
         addRow(result, row++, "Total tracked time:", totalTimeField)
         addRow(result, row++, "Today:", todayTimeField)
         addRow(result, row++, "Pending events:", pendingEventsField)
-        addStatsButtons(result, row++)
-
-        /*
-        addSection(result, row++, "Updates")
-        addRow(result, row++, "Update info URL:", updateInfoUrlField)
-        addRow(result, row++, "Current version:", currentVersionField)
-        addRow(result, row++, "Latest version:", latestVersionField)
-        addRow(result, row++, "Update notes:", updateNotes)
-        addUpdateButtons(result, row++)
-        */
+        addStatsButtons(result, row)
 
         importButton.addActionListener { importFromVsix() }
-        //checkUpdatesButton.addActionListener { checkForUpdates() }
-        //updateButton.addActionListener { openUpdatePage() }
         showLogsButton.addActionListener { LogOpener.openTrackerLog() }
         openSessionsButton.addActionListener { LogOpener.openSessionsLog() }
         clearLogsButton.addActionListener { clearLogs() }
@@ -150,6 +137,8 @@ class TrackerConfigurable : Configurable {
         chooseDataDirButton.addActionListener { chooseDataDir() }
         resetDefaultsButton.addActionListener { resetToDefaults() }
         detailedStatsButton.addActionListener { StatsDialog(null).show() }
+        disableStatusBarButton.addActionListener { updateRestartIdeButtonVisibility() }
+        restartIdeButton.addActionListener { restartIde() }
 
         reset()
         return result
@@ -159,7 +148,6 @@ class TrackerConfigurable : Configurable {
         val current = service.get()
         return importedSettings != null ||
             userTokenField.text != current.userToken ||
-            //eventField.text != current.event ||
             endpointField.text != current.endpoint ||
             fileExtensionsField.text != current.fileExtensions ||
             updateInfoUrlField.text != current.updateInfoUrl ||
@@ -177,7 +165,6 @@ class TrackerConfigurable : Configurable {
     override fun apply() {
         val updated = service.get().copy()
         updated.userToken = userTokenField.text.trim()
-        //updated.event = eventField.text.trim()
         updated.endpoint = endpointField.text.trim()
         updated.fileExtensions = fileExtensionsField.text.trim()
         updated.updateInfoUrl = updateInfoUrlField.text.trim()
@@ -194,19 +181,22 @@ class TrackerConfigurable : Configurable {
         val imported = importedSettings
         if (imported != null) {
             if (imported.eventType.isNotBlank()) updated.eventType = imported.eventType
-            //if (imported.event.isNotBlank()) updated.event = imported.event
         }
 
         service.update(updated)
         importedSettings = null
         refreshRuntimeInfo()
-        refreshStatusBarWidgets(updated)
+
+        initialDisableStatusBarButton = updated.disableStatusBarButton
+        updateRestartIdeButtonVisibility()
     }
 
     override fun reset() {
         val current = service.get()
+        if (initialDisableStatusBarButton == null) {
+            initialDisableStatusBarButton = current.disableStatusBarButton
+        }
         userTokenField.text = current.userToken
-        //eventField.text = current.event
         endpointField.text = current.endpoint
         fileExtensionsField.text = current.fileExtensions
         updateInfoUrlField.text = current.updateInfoUrl
@@ -219,15 +209,54 @@ class TrackerConfigurable : Configurable {
         logModeBox.selectedItem = current.logMode.ifBlank { "Normal" }
         maxLogFileSizeMbField.text = current.maxLogFileSizeMb.toString()
         customDataDirField.text = current.customDataDir
-        /*
-        currentVersionField.text = VersionUtil.currentVersion()
-        latestVersionField.text = "Not checked"
-        updateNotes.text = ""
-        latestDownloadUrl = ""
-        updateButton.isVisible = false
-         */
         importedSettings = null
         refreshRuntimeInfo()
+
+        initialDisableStatusBarButton = current.disableStatusBarButton
+        updateRestartIdeButtonVisibility()
+    }
+
+    private fun addStatusBarButtonRow(panel: JPanel, row: Int) {
+        val wrapper = JPanel(GridBagLayout())
+
+        val checkboxConstraints = GridBagConstraints()
+        checkboxConstraints.gridx = 0
+        checkboxConstraints.gridy = 0
+        checkboxConstraints.anchor = GridBagConstraints.WEST
+        wrapper.add(disableStatusBarButton, checkboxConstraints)
+
+        val buttonConstraints = GridBagConstraints()
+        buttonConstraints.gridx = 1
+        buttonConstraints.gridy = 0
+        buttonConstraints.insets.set(0, 10, 0, 0)
+        wrapper.add(restartIdeButton, buttonConstraints)
+
+        addFullRow(panel, row, wrapper)
+    }
+
+    private fun updateRestartIdeButtonVisibility() {
+        val initial = initialDisableStatusBarButton
+        restartIdeButton.isVisible = initial != null && disableStatusBarButton.isSelected != initial
+        panel?.revalidate()
+        panel?.repaint()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun restartIde() {
+        val result = Messages.showYesNoDialog(
+            "Restart IDE to apply changes?",
+            "GoIT Tracker",
+            Messages.getQuestionIcon()
+        )
+
+        if (result != Messages.YES) return
+
+        if (isModified) {
+            apply()
+        }
+
+        val app = ApplicationManager.getApplication() as ApplicationEx
+        app.restart(true)
     }
 
     private fun importFromVsix() {
@@ -256,52 +285,11 @@ class TrackerConfigurable : Configurable {
         }
 
         importedSettings = imported
-        //if (imported.event.isNotBlank()) eventField.text = imported.event
         if (imported.userToken.isNotBlank()) userTokenField.text = imported.userToken
         if (imported.endpoint.isNotBlank()) endpointField.text = imported.endpoint
         if (imported.fileExtensions.isNotBlank()) fileExtensionsField.text = imported.fileExtensions
         Messages.showInfoMessage("VSCode plugin values were imported into the form. Press Apply to save them.", "GoIT Tracker Import")
     }
-
-    /*private fun checkForUpdates() {
-        val updateInfoUrl = updateInfoUrlField.text.trim()
-        if (updateInfoUrl.isBlank()) {
-            Messages.showErrorDialog("Update info URL is empty.", "GoIT Tracker Updates")
-            return
-        }
-
-        latestVersionField.text = "Checking..."
-        updateButton.isVisible = false
-        latestDownloadUrl = ""
-
-        ApplicationManager.getApplication().executeOnPooledThread {
-            val checker = UpdateChecker(service.get().requestTimeoutMs.coerceAtLeast(5000))
-            val info = checker.check(updateInfoUrl)
-
-            SwingUtilities.invokeLater {
-                if (info == null || info.version.isBlank()) {
-                    latestVersionField.text = "Unavailable"
-                    updateNotes.text = "Cannot check latest version."
-                } else {
-                    latestVersionField.text = info.version
-                    updateNotes.text = info.changelog
-                    latestDownloadUrl = info.downloadUrl
-                    updateButton.isVisible = VersionUtil.isNewer(info.version, VersionUtil.currentVersion()) && info.downloadUrl.isNotBlank()
-                    if (!updateButton.isVisible) {
-                        Messages.showInfoMessage("You are using the latest available version.", "GoIT Tracker Updates")
-                    }
-                }
-            }
-        }
-    }
-
-    private fun openUpdatePage() {
-        val url = latestDownloadUrl
-        if (url.isBlank()) return
-        ApplicationManager.getApplication().executeOnPooledThread {
-            UpdateChecker(service.get().requestTimeoutMs).openDownloadPage(url)
-        }
-    }*/
 
     private fun clearLogs() {
         LogOpener.clearLogs()
@@ -318,7 +306,6 @@ class TrackerConfigurable : Configurable {
     private fun testApiConnection() {
         val temporary = service.get().copy()
         temporary.userToken = userTokenField.text.trim()
-        //temporary.event = eventField.text.trim()
         temporary.endpoint = endpointField.text.trim()
         service.update(temporary)
 
@@ -354,7 +341,6 @@ class TrackerConfigurable : Configurable {
         val currentToken = userTokenField.text.trim()
         val defaults = TrackerConfigParser.parse(javaClass.classLoader.getResourceAsStream("default-config.json")?.bufferedReader()?.use { it.readText() } ?: "")
         userTokenField.text = currentToken
-        //eventField.text = defaults.event
         endpointField.text = defaults.endpoint
         fileExtensionsField.text = defaults.fileExtensions
         updateInfoUrlField.text = defaults.updateInfoUrl
@@ -454,12 +440,6 @@ class TrackerConfigurable : Configurable {
         addButtonPanel(panel, row, listOf(detailedStatsButton, clearQueueButton, testApiButton, resetDefaultsButton))
     }
 
-    /*
-    private fun addUpdateButtons(panel: JPanel, row: Int) {
-        addButtonPanel(panel, row, listOf(checkUpdatesButton, updateButton))
-    }
-    */
-
     private fun addButtonPanel(panel: JPanel, row: Int, buttons: List<JButton>) {
         val wrapper = JPanel(GridBagLayout())
         val constraints = GridBagConstraints()
@@ -477,17 +457,5 @@ class TrackerConfigurable : Configurable {
         panelConstraints.anchor = GridBagConstraints.WEST
         panelConstraints.insets.set(6, 4, 6, 4)
         panel.add(wrapper, panelConstraints)
-    }
-
-    private fun refreshStatusBarWidgets(settings: TrackerSettings) {
-        ProjectManager.getInstance().openProjects.forEach { project ->
-            val statusBar = WindowManager.getInstance().getStatusBar(project)
-
-            statusBar?.removeWidget(GoitStatusBarWidget.WIDGET_ID)
-
-            if (!settings.disableStatusBarButton && statusBar != null) {
-                statusBar.addWidget(GoitStatusBarWidget(project), project)
-            }
-        }
     }
 }

@@ -9,7 +9,7 @@ import tracker.tools.TrackerTextLog
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
-import java.net.URL
+import java.net.URI
 
 @Service(Service.Level.APP)
 class ApiClient {
@@ -46,7 +46,7 @@ class ApiClient {
             textLog.info("API request prepared: POST ${settings.endpoint}, event=${settings.event}, eventType=${settings.eventType}, startedAt=${event.startedAt}, durationSeconds=${event.durationSeconds}")
             textLog.info("API request body: $payload")
 
-            connection = URL(settings.endpoint).openConnection() as HttpURLConnection
+            connection = URI(settings.endpoint).toURL().openConnection() as HttpURLConnection
             connection.requestMethod = "POST"
             connection.doOutput = true
             connection.connectTimeout = settings.requestTimeoutMs

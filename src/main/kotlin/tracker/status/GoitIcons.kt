@@ -1,6 +1,7 @@
 package tracker.status
 
 import com.intellij.openapi.util.IconLoader
+import javax.swing.Icon
 
 object GoitIcons {
     val ON = IconLoader.getIcon("/icons/goit_on.svg", GoitIcons::class.java)

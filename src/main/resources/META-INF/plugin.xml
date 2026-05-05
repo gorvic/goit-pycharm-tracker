@@ -3,7 +3,8 @@
     <name>GoIT Tracker</name>
     <vendor url="https://github.com/gorvic">gorvic</vendor>
     <url>https://github.com/gorvic/goit-pycharm-tracker</url>
-    <version>1.6.0</version>
+    <version>1.6.1</version>
+    <idea-version since-build="233"/>
     <description><![CDATA[
     <h2>GoIT Tracker</h2>
 
@@ -27,6 +28,16 @@
     ]]>
     </description>
     <change-notes><![CDATA[
+        <h3>1.6.1</h3>
+        <ul>
+            <li>Resolved JetBrains Marketplace validation issues.</li>
+            <li>Removed internal API usage related to Status Bar widget management.</li>
+            <li>Reworked Status Bar widget visibility handling to comply with IntelliJ Platform guidelines.</li>
+            <li>Added IDE restart prompt when changing Status Bar widget visibility.</li>
+            <li>Reduced deprecated API usage and improved forward compatibility.</li>
+            <li>General stability and code quality improvements.</li>
+        </ul>
+
         <h3>1.6.0</h3>
         <ul>
             <li>Added Activity tracking mode setting with Hard key press activity and Soft activity options.</li>
