@@ -1,0 +1,19 @@
+{
+  "userToken": "",
+  "event": "vscode",
+  "eventType": "workOnFrontend",
+  "endpoint": "https://dw.api.edu.goit.global/api/v1/event/user",
+  "fileExtensions": "js|html|css|scss|sass|json|ts|tsx|jsx|py",
+  "tickSeconds": 5,
+  "idleTimeoutSeconds": 600,
+  "flushIntervalSeconds": 600,
+  "maxQueueSize": 1000,
+  "requestTimeoutMs": 15000,
+  "updateInfoUrl": "",
+  "disableStatusBarButton": false,
+  "activateOnStartup": false,
+  "logMode": "Normal",
+  "maxLogFileSizeMb": 5,
+  "customDataDir": "",
+  "activityTrackingMode": "HARD"
+}

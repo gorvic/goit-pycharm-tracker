@@ -1,0 +1,104 @@
+<idea-plugin>
+    <id>goit.pycharm.tracker</id>
+    <name>GoIT PyCharm Tracker</name>
+    <vendor>gorvic</vendor>
+    <vendor url="https://github.com/gorvic">gorvic</vendor>
+    <url>https://github.com/gorvic/goit-pycharm-tracker</url>
+    <version>1.6.0</version>
+    <description><![CDATA[
+    <h2>GoIT PyCharm Tracker</h2>
+
+    <p>A lightweight and reliable activity tracking plugin for PyCharm that measures your coding time and sends it to the GoIT API.</p>
+    <p>The plugin is designed to provide accurate session tracking, support offline work, and offer flexible activity detection modes depending on your workflow.</p>
+
+    <h3>Features</h3>
+    <ul>
+        <li>Accurate coding session tracking</li>
+        <li>Soft activity tracking (thinking, reading, navigation)</li>
+        <li>Hard key press activity tracking (default)</li>
+        <li>Offline queue with automatic retry</li>
+        <li>Local session logging and statistics</li>
+        <li>Reliable API communication with retry logic</li>
+        <li>Fully configurable tracking behavior</li>
+        <li>Native PyCharm UI integration</li>
+    </ul>
+
+    <h3>Configuration</h3>
+    <p>Settings → Tools → GoIT PyCharm Tracker</p>
+    ]]>
+    </description>
+    <change-notes><![CDATA[
+        <h3>1.6.0</h3>
+        <ul>
+            <li>Added Activity tracking mode setting with Hard key press activity and Soft activity options.</li>
+            <li>Soft activity mode tracks caret movement, scrolling and file switching in addition to document edits.</li>
+            <li>Soft activity mode counts thinking and reading time until the configured idle timeout.</li>
+            <li>Hard key press activity remains the default and preserves the 1.5.0 behavior.</li>
+        </ul>
+
+        <h3>1.5.0</h3>
+        <ul>
+            <li>Added status bar button visibility setting and activate-on-startup option.</li>
+            <li>Exposed tracking timeout settings in the GUI.</li>
+            <li>Added logging mode, maximum log size cleanup and custom data directory.</li>
+            <li>Added clear logs, open sessions log, clear queue and API connection test actions.</li>
+            <li>Added general and detailed local tracking statistics.</li>
+        </ul>
+
+        <h3>1.4.0</h3>
+        <ul>
+            <li>Added VSCode plugin import for extracting user token and compatible defaults from package.json.</li>
+            <li>Added Show logs and Open data folder buttons.</li>
+            <li>Added detailed tracking diagnostics in tracker.log.</li>
+            <li>Added explicit queue send/fail/remove logging.</li>
+            <li>Added session start/activity/close logging.</li>
+        </ul>
+
+        <h3>1.3.0</h3>
+        <ul>
+            <li>Added background delivery and persistent retry queue.</li>
+            <li>Queued events are removed only after HTTP 2xx response.</li>
+            <li>Added safe offline behavior and startup retry.</li>
+        </ul>
+
+        <h3>1.2.0</h3>
+        <ul>
+            <li>Added GUI settings, status bar toggle, session logging, project-level tracking and multi-window support.</li>
+        </ul>
+
+        <h3>1.1.0</h3>
+        <ul>
+            <li>Tracking starts disabled and requires manual enabling per project.</li>
+        </ul>
+
+        <h3>1.0.0</h3>
+        <ul>
+            <li>Initial PyCharm implementation of GoIT-compatible tracking.</li>
+        </ul>
+    ]]></change-notes>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="tracker.settings.TrackerSettingsService"/>
+        <postStartupActivity implementation="tracker.tracking.TrackerStartupActivity"/>
+
+        <applicationConfigurable
+            instance="tracker.settings.TrackerConfigurable"
+            displayName="GoIT PyCharm Tracker"
+            groupId="tools"/>
+
+        <statusBarWidgetFactory implementation="tracker.status.GoitStatusBarWidgetFactory"/>
+        <notificationGroup id="GoIT Tracker" displayType="BALLOON"/>
+    </extensions>
+
+    <actions>
+        <action id="GoitTracker.Toggle"
+                class="tracker.actions.ToggleTrackingAction"
+                text="Enable GoIT Tracking"
+                icon="/icons/goit_off.svg"
+                description="Enable or disable GoIT tracking for the current project">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>

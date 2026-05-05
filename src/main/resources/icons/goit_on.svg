@@ -1,0 +1,18 @@
+<svg width="16" height="16" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bodyOn" x1="0" y1="8" x2="58" y2="56">
+      <stop offset="0" stop-color="#050505"/>
+      <stop offset="0.65" stop-color="#111111"/>
+      <stop offset="1" stop-color="#020202"/>
+    </linearGradient>
+    <linearGradient id="edgeOn" x1="42" y1="8" x2="58" y2="56">
+      <stop offset="0" stop-color="#7CFF6B"/>
+      <stop offset="0.55" stop-color="#39D353"/>
+      <stop offset="1" stop-color="#168A34"/>
+    </linearGradient>
+  </defs>
+  <path d="M4 10 H45 L60 32 L45 54 H4 Z" fill="url(#bodyOn)"/>
+  <path d="M45 10 L60 32 L45 54" fill="none" stroke="url(#edgeOn)" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M7 13 H43 L56 32 L43 51 H7 Z" fill="none" stroke="#242424" stroke-width="2" opacity="0.9"/>
+  <text x="27" y="40" text-anchor="middle" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="27" font-weight="900" letter-spacing="-3" fill="#FFFFFF">GO</text>
+</svg>
