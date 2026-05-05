@@ -1,12 +1,11 @@
 <idea-plugin>
-    <id>goit.pycharm.tracker</id>
-    <name>GoIT PyCharm Tracker</name>
-    <vendor>gorvic</vendor>
+    <id>ua.goit.ide.tracker</id>
+    <name>GoIT Tracker</name>
     <vendor url="https://github.com/gorvic">gorvic</vendor>
     <url>https://github.com/gorvic/goit-pycharm-tracker</url>
     <version>1.6.0</version>
     <description><![CDATA[
-    <h2>GoIT PyCharm Tracker</h2>
+    <h2>GoIT Tracker</h2>
 
     <p>A lightweight and reliable activity tracking plugin for PyCharm that measures your coding time and sends it to the GoIT API.</p>
     <p>The plugin is designed to provide accurate session tracking, support offline work, and offer flexible activity detection modes depending on your workflow.</p>
@@ -85,11 +84,11 @@
 
         <applicationConfigurable
             instance="tracker.settings.TrackerConfigurable"
-            displayName="GoIT PyCharm Tracker"
+            displayName="GoIT Tracker"
             groupId="tools"/>
 
         <statusBarWidgetFactory implementation="tracker.status.GoitStatusBarWidgetFactory"/>
-        <notificationGroup id="GoIT Tracker" displayType="BALLOON"/>
+        <notificationGroup id="GoIT Tracker" displayType="STICKY_BALLOON"/>
     </extensions>
 
     <actions>
