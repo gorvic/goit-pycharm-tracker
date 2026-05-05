@@ -1,4 +1,4 @@
-# GoIT PyCharm Tracker
+# GoIT Tracker
 
 A lightweight and reliable activity tracking plugin for PyCharm that measures your coding time and sends it to the GoIT API.
 
@@ -26,7 +26,7 @@ The plugin is designed to provide accurate session tracking, support offline wor
 *(recommended once published)*
 
 1. Open **Settings → Plugins**
-2. Search for **GoIT PyCharm Tracker**
+2. Search for **GoIT Tracker**
 3. Click **Install**
 
 ---
@@ -45,7 +45,7 @@ The plugin is designed to provide accurate session tracking, support offline wor
 Open:
 
 ```text
-Settings → Tools → GoIT PyCharm Tracker
+Settings → Tools → GoIT Tracker
 ```
 
 ### Required fields

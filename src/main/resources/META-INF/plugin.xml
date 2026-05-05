@@ -87,7 +87,7 @@
             displayName="GoIT Tracker"
             groupId="tools"/>
 
-        <statusBarWidgetFactory implementation="tracker.status.GoitStatusBarWidgetFactory"/>
+        <statusBarWidgetFactory id="GoitTrackerWidget" implementation="tracker.status.GoitStatusBarWidgetFactory"/>
         <notificationGroup id="GoIT Tracker" displayType="STICKY_BALLOON"/>
     </extensions>
 
